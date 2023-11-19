@@ -15,6 +15,26 @@ class MyNeuralNetwork:
     for lay in range(1, self.L):
       self.w.append(np.zeros((layers[lay], layers[lay - 1])))
 
+  # sigmoid function
+  def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+  
+  # tanh function
+  def tanh(x):
+    return np.tanh(x)
+  
+  # linear function
+  def linear(x):
+    return x
+  
+  # rectified linear function
+  def relu(x):
+    return max(0.0, x)
+  
+  # the activation function that it will be used using function references. 
+  def fact(operation, x):
+    return operation(x)
+
 # layers include input layer + hidden layers + output layer
 layers = [4, 9, 5, 1]
 nn = MyNeuralNetwork(layers)
