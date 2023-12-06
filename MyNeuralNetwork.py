@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import Utility as util
 
 # Neural Network class
 class MyNeuralNetwork:
@@ -41,8 +42,15 @@ class MyNeuralNetwork:
   
   #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
   def feedforward(self, x):
-    y = x
-    return 0
+    self.h[0] = x
+    self.xi[0] = x
+    for lay in range(1, self.L):
+      h_t = self.h[lay - 1].T
+      theta_t = self.theta[lay].T
+      self.h[lay] = np.dot(self.w[lay], h_t) + theta_t
+      self.xi[lay] = self.fact(util.utility.linear ,self.h[lay])
+    o = self.xi[self.L - 1]  
+    return o
 
 #read and parse the .csv features file 
 df = pd.read_csv('Normalized Data/A1-turbine_normalized.txt', delimiter = '\t')
