@@ -5,7 +5,7 @@ import Utility as util
 # Neural Network class
 class MyNeuralNetwork:
 
-  def __init__(self, layers):
+  def __init__(self, layers, operation):
     self.L = len(layers)    # number of layers
     self.n = layers.copy()  # number of neurons in each layer
 
@@ -15,7 +15,7 @@ class MyNeuralNetwork:
 
     self.xi = []            # node values
     for lay in range(self.L):
-      self.xi.append(np.zeros(layers[lay]))
+      self.xi.append(np.ones(layers[lay]))
 
     self.w = []             # edge weights
     self.w.append(np.zeros((1, 1)))
@@ -26,10 +26,12 @@ class MyNeuralNetwork:
     for lay in range(self.L):
       self.h.append(np.zeros(layers[lay]))
   
-  
+    self.fact = operation
+
+    
   # the activation function that will be used, using function references. 
-  def fact(self, operation, x):
-    return operation(x)
+  # def fact(self, operation, x):
+  #   return operation(x)
   
   # X : an array of arrays size (n_samples,n_features), which holds the training samples represented as floating point
   #feature vectors; and a vector y of size (n_samples), which holds the target
@@ -37,20 +39,34 @@ class MyNeuralNetwork:
   def fit(self, X, y):
     num_training_patterns = X.shape[0]
     for i in range(0 , num_training_patterns):
-      self.feedforward(X[i])
+      o = self.feedforward(X[i])
+      self.backpropagate(o, y[i])
     return 0
   
-  #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+  #Feed−forward propagation of pattern xµ to obtain the output o(xµ) using vector multiplications
   def feedforward(self, x):
     self.h[0] = x
     self.xi[0] = x
     for lay in range(1, self.L):
-      h_t = self.h[lay - 1].T
+      #transpose x_i to nl * 1
+      xi_t = self.xi[lay - 1].T
+
+      #transpose theta_i to nl * 1                                   
       theta_t = self.theta[lay].T
-      self.h[lay] = np.dot(self.w[lay], h_t) + theta_t
-      self.xi[lay] = self.fact(util.utility.linear ,self.h[lay])
+
+      #multiply matrix w of size (nl * nl-1) * x_i of size (nl-1 * 1) + theta_i of size(nl * 1) to get h of size(nl * 1)                               
+      self.h[lay] = np.dot(self.w[lay], xi_t) + theta_t
+
+      #calculate fact of h of size(nl * 1) to get g of size(nl * 1) then assign it to x_i of size (nl * 1)
+      self.xi[lay] = self.fact.g_diff(self.h[lay])
+
     o = self.xi[self.L - 1]  
     return o
+  
+  #Back−propagate the error for this pattern
+  def backpropagate(self, o, z):
+    
+    return 0
 
 #read and parse the .csv features file 
 df = pd.read_csv('Normalized Data/A1-turbine_normalized.txt', delimiter = '\t')
@@ -74,7 +90,7 @@ training_targets = targets[0 : num_training_features]
 
 # layers include input layer + hidden layers + output layer
 layers = [4, 9, 5, 1]
-nn = MyNeuralNetwork(layers)
+nn = MyNeuralNetwork(layers, util.linear)
 
 # call fit function with features (n_samples,n_features) and targets (n_samples)
 nn.fit(training_features, training_targets)
