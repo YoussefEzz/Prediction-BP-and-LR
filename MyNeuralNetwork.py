@@ -15,17 +15,21 @@ class MyNeuralNetwork:
 
     self.xi = []            # node values
     for lay in range(self.L):
-      self.xi.append(np.ones(layers[lay]))
+      self.xi.append(np.zeros(layers[lay]))
 
     self.w = []             # edge weights
     self.w.append(np.zeros((1, 1)))
     for lay in range(1, self.L):
       self.w.append(np.zeros((layers[lay], layers[lay - 1])))
 
-    self.h = []            # nan array of arrays for the fields (h)
+    self.h = []             # nan array of arrays for the fields (h)
     for lay in range(self.L):
       self.h.append(np.zeros(layers[lay]))
-  
+
+    self.delta = []         # an array of arrays for the propagation of errors (Δ)
+    for lay in range(self.L):
+      self.delta.append(np.zeros(layers[lay]))
+
     self.fact = operation
 
     
@@ -58,14 +62,19 @@ class MyNeuralNetwork:
       self.h[lay] = np.dot(self.w[lay], xi_t) + theta_t
 
       #calculate fact of h of size(nl * 1) to get g of size(nl * 1) then assign it to x_i of size (nl * 1)
-      self.xi[lay] = self.fact.g_diff(self.h[lay])
+      self.xi[lay] = self.fact.g(self.h[lay])
 
     o = self.xi[self.L - 1]  
     return o
   
-  #Back−propagate the error for this pattern
+  #Back−propagate the error for each pattern
   def backpropagate(self, o, z):
-    
+    self.delta[self.L - 1] = self.fact.g_diff(self.h[self.L - 1]) * (o - z)
+    l = self.L - 1
+    for i in range(l - 1, 0, -1):
+      print(i)
+      #temp = np.dot(self.delta[i + 1], self.w[i + 1])
+      self.delta[i] = self.fact.g_diff(self.h[i]) * np.dot(self.delta[i + 1], self.w[i + 1])
     return 0
 
 #read and parse the .csv features file 

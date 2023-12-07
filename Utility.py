@@ -11,7 +11,7 @@ class linear(object):
     @staticmethod
     # linear differentiation function
     def g_diff(x):
-        return 1
+        return np.ones(len(x))
     
 
 class relu(object):
