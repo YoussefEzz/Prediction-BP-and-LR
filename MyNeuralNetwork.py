@@ -5,9 +5,11 @@ import Utility as util
 # Neural Network class
 class MyNeuralNetwork:
 
-  def __init__(self, layers, operation):
-    self.L = len(layers)    # number of layers
-    self.n = layers.copy()  # number of neurons in each layer
+  def __init__(self, layers, learning_rate, momentum, operation):
+    self.L = len(layers)      # number of layers
+    self.n = layers.copy()    # number of neurons in each layer
+    self.eta = learning_rate  # η learning rate
+    self.alpha = momentum     # α momentum
 
     self.theta = [] #an array of arrays for the thresholds (θ)
     for lay in range(self.L):
@@ -30,12 +32,25 @@ class MyNeuralNetwork:
     for lay in range(self.L):
       self.delta.append(np.zeros(layers[lay]))
 
-    self.fact = operation
+    self.d_w = []           # an array of matrices for the changes of the weights (δw)
+    self.d_w.append(np.zeros((1, 1)))
+    for lay in range(1, self.L):
+      self.d_w.append(np.zeros((layers[lay], layers[lay - 1])))
 
-    
-  # the activation function that will be used, using function references. 
-  # def fact(self, operation, x):
-  #   return operation(x)
+    self.d_w_prev = []      # an array of matrices for the previous changes of the weights, used for the momentum term (δw(prev))
+    self.d_w_prev.append(np.zeros((1, 1)))
+    for lay in range(1, self.L):
+      self.d_w_prev.append(np.zeros((layers[lay], layers[lay - 1])))
+
+    self.d_theta = []       # an array of arrays for the changes of the weights (δθ)
+    for lay in range(self.L):
+      self.d_theta.append(np.zeros(layers[lay]))
+
+    self.d_theta_prev = []       # an array of arrays for the previous changes of the thresholds, used for the momentum term (δθ(prev))
+    for lay in range(self.L):
+      self.d_theta_prev.append(np.zeros(layers[lay]))
+
+    self.fact = operation
   
   # X : an array of arrays size (n_samples,n_features), which holds the training samples represented as floating point
   #feature vectors; and a vector y of size (n_samples), which holds the target
@@ -45,6 +60,7 @@ class MyNeuralNetwork:
     for i in range(0 , num_training_patterns):
       o = self.feedforward(X[i])
       self.backpropagate(o, y[i])
+      self.update_weights()
     return 0
   
   #Feed−forward propagation of pattern xµ to obtain the output o(xµ) using vector multiplications
@@ -53,13 +69,16 @@ class MyNeuralNetwork:
     self.xi[0] = x
     for lay in range(1, self.L):
       #transpose x_i to nl * 1
-      xi_t = self.xi[lay - 1].T
+      xi_t = self.xi[lay - 1]
+      #print(xi_t)
 
       #transpose theta_i to nl * 1                                   
-      theta_t = self.theta[lay].T
+      theta_t = self.theta[lay]
+      #print(theta_t)
 
       #multiply matrix w of size (nl * nl-1) * x_i of size (nl-1 * 1) + theta_i of size(nl * 1) to get h of size(nl * 1)                               
       self.h[lay] = np.dot(self.w[lay], xi_t) + theta_t
+      #print(self.h[lay])
 
       #calculate fact of h of size(nl * 1) to get g of size(nl * 1) then assign it to x_i of size (nl * 1)
       self.xi[lay] = self.fact.g(self.h[lay])
@@ -69,47 +88,48 @@ class MyNeuralNetwork:
   
   #Back−propagate the error for each pattern
   def backpropagate(self, o, z):
+
+    #Δ(L) = g'(h(L))(o - z)
     self.delta[self.L - 1] = self.fact.g_diff(self.h[self.L - 1]) * (o - z)
     l = self.L - 1
     for i in range(l - 1, 0, -1):
-      print(i)
-      #temp = np.dot(self.delta[i + 1], self.w[i + 1])
+
+      # temp = np.dot(self.delta[i + 1], self.w[i + 1])
+      # print(temp)
+
+      # g_temp = self.fact.g_diff(self.h[i])
+      # print(g_temp)
+
+      # print(temp * g_temp) 
       self.delta[i] = self.fact.g_diff(self.h[i]) * np.dot(self.delta[i + 1], self.w[i + 1])
-    return 0
+    return
 
-#read and parse the .csv features file 
-df = pd.read_csv('Normalized Data/A1-turbine_normalized.txt', delimiter = '\t')
-df.head()
 
-columns = df.shape[1]
+  #Update weights and thresholds
+  def update_weights(self):
 
-# construct an array of arrays size (451, 4) for all features input values
-inputcolumns = df.columns[0 : 4]
-features = df[inputcolumns].values
+    for lay in range(1, self.L):
+      
+      # product_t = np.outer(self.delta[lay], self.xi[lay - 1])
+      # print(product_t)
 
-#select the first 85% as training features an array of arrays size (383, 4)
-num_training_features = int(85 * features.shape[0] / 100)
-training_features = features[0 : num_training_features]
+      # Amount of weights update
+      # The elements of the resulting matrix are obtained by outer function by multiplying each element of vector1 by each element of vector2. The resulting matrix has dimensions len(vector1) x len(vector2)
+      self.d_w[lay] = -1 * self.eta * np.outer(self.delta[lay], self.xi[lay - 1]) + self.alpha * self.d_w_prev[lay]
 
-# construct an array of size (451) for all features target values
-outputcolumn = df.columns[4]
-targets = df[outputcolumn].values
-#select the first 85% as training tsrgets an array  size (383)
-training_targets = targets[0 : num_training_features]
+      # Amount of thresholds update
+      self.d_theta[lay]  = self.eta * self.delta[lay] + self.alpha * self.d_theta_prev[lay]
 
-# layers include input layer + hidden layers + output layer
-layers = [4, 9, 5, 1]
-nn = MyNeuralNetwork(layers, util.linear)
 
-# call fit function with features (n_samples,n_features) and targets (n_samples)
-nn.fit(training_features, training_targets)
+      # update all the weights and thresholds changes we applied in the previous step
+      self.d_w_prev[lay]     = self.d_w[lay]
 
-print("L = ", nn.L, end="\n")
-print("n = ", nn.n, end="\n")
+      self.d_theta_prev[lay] = self.d_theta[lay]
 
-print("xi = ", nn.xi, end="\n")
-print("xi[0] = ", nn.xi[0], end="\n")
-print("xi[1] = ", nn.xi[0], end="\n")
 
-print("wh = ", nn.w, end="\n")
-print("wh[1] = ", nn.w[1], end="\n")
+      # Finally, update all the weights and thresholds
+      self.w[lay] = self.w[lay] + self.d_w[lay]
+      
+      self.theta[lay] = self.theta[lay] + self.d_theta[lay]
+
+    return 
