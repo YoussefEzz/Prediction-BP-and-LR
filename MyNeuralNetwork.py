@@ -1,19 +1,26 @@
+from tkinter import W
 import pandas as pd
 import numpy as np
 import Utility as util
+from sklearn.model_selection import train_test_split
 
 # Neural Network class
 class MyNeuralNetwork:
 
-  def __init__(self, layers, learning_rate, momentum, operation):
-    self.L = len(layers)      # number of layers
-    self.n = layers.copy()    # number of neurons in each layer
-    self.eta = learning_rate  # η learning rate
-    self.alpha = momentum     # α momentum
+  def __init__(self, layers, num_epochs, learning_rate, momentum, operation, validation_percent):
+    self.L = len(layers)                                                              # number of layers
+    self.n = layers.copy()                                                            # number of neurons in each layer
+    self.eta = learning_rate                                                          # η learning rate
+    self.alpha = momentum                                                             # α momentum
+    self.validation_percent = validation_percent if validation_percent > 0 else None  # validation_percent
+    self.num_epochs = num_epochs                                                      # epochs
+
+    self.training_error = []                                                          # array of size (n_epochs, 2) that contain the evolution of the training error
+    self.validation_error = []                                                        # array of size (n_epochs, 2) that contain the evolution of the validation error
 
     self.theta = [] #an array of arrays for the thresholds (θ)
     for lay in range(self.L):
-      self.theta.append(np.zeros(layers[lay]))
+      self.theta.append( np.zeros(layers[lay]))
 
     self.xi = []            # node values
     for lay in range(self.L):
@@ -53,15 +60,38 @@ class MyNeuralNetwork:
     self.fact = operation
   
   # X : an array of arrays size (n_samples,n_features), which holds the training samples represented as floating point
-  #feature vectors; and a vector y of size (n_samples), which holds the target
-  #values for the training samples
+  #feature vectors; and a vector y of size (n_samples), which holds the target values for the training samples
   def fit(self, X, y):
-    num_training_patterns = X.shape[0]
-    for i in range(0 , num_training_patterns):
-      o = self.feedforward(X[i])
-      self.backpropagate(o, y[i])
-      self.update_weights()
-    return 0
+    #split X and y into training and validation sets
+    X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size = self.validation_percent, random_state= 42)
+
+
+    num_training_patterns = X_train.shape[0]
+
+    for epoch in range(0, self.num_epochs):
+      
+      for i in range(0 , num_training_patterns):
+
+        #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+        o = self.feedforward(X_train[i])
+        print("sample : ", i, " ,x : ", X_train[i])
+        print(self.w)
+        #Back−propagate the error for this pattern
+        self.backpropagate(o, y_train[i])
+
+
+        self.update_weights()
+        # print("sample : ", i, " ,x : ", X_train[i])
+        # print(self.w)
+      # print("epoch = ", epoch)
+      
+      #Feed−forward all training patterns and calculate their prediction quadratic error
+      #self.error(X_train, y_train, self.training_error)
+
+      #Feed−forward all validation patterns and calculate their prediction quadratic error
+      #self.error(X_validation, y_validation, self.validation_error)
+
+    return
   
   #Feed−forward propagation of pattern xµ to obtain the output o(xµ) using vector multiplications
   def feedforward(self, x):
@@ -72,7 +102,7 @@ class MyNeuralNetwork:
       xi_t = self.xi[lay - 1]
       #print(xi_t)
 
-      #transpose theta_i to nl * 1                                   
+      # #transpose theta_i to nl * 1                                   
       theta_t = self.theta[lay]
       #print(theta_t)
 
@@ -110,9 +140,9 @@ class MyNeuralNetwork:
 
     for lay in range(1, self.L):
       
-      # product_t = np.outer(self.delta[lay], self.xi[lay - 1])
-      # print(product_t)
-
+      product_t = np.outer(self.delta[lay], self.xi[lay - 1])
+      #print(product_t)
+      # print(-1 * self.eta *product_t)
       # Amount of weights update
       # The elements of the resulting matrix are obtained by outer function by multiplying each element of vector1 by each element of vector2. The resulting matrix has dimensions len(vector1) x len(vector2)
       self.d_w[lay] = -1 * self.eta * np.outer(self.delta[lay], self.xi[lay - 1]) + self.alpha * self.d_w_prev[lay]
@@ -129,7 +159,22 @@ class MyNeuralNetwork:
 
       # Finally, update all the weights and thresholds
       self.w[lay] = self.w[lay] + self.d_w[lay]
-      
+      #print(self.w)
       self.theta[lay] = self.theta[lay] + self.d_theta[lay]
 
     return 
+  
+  #PQE = Σ(y_pred - y_actual)^2 / n
+  def error(self, X_train, y_train, error):
+    num_patterns = X_train.shape[0]
+    PQE = 0
+    for i in range(0 , num_patterns):
+
+        
+        z = y_train[i]
+        #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+        o = self.feedforward(X_train[i])
+        PQE = PQE + ((o - z) ** 2)
+
+    PQE = PQE / num_patterns
+    error.append(PQE)

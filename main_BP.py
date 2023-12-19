@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import Utility as util
 
-#read and parse the .csv features file 
+
+#read and parse the .csv features file for A1-turbine normalized data
 df = pd.read_csv('Normalized Data/A1-turbine_normalized.txt', delimiter = '\t')
 df.head()
 
@@ -25,7 +26,7 @@ training_targets = targets[0 : num_training_features]
 
 # layers include input layer + hidden layers + output layer
 layers = [4, 9, 5, 1]
-nn = NeuralNetwork.MyNeuralNetwork(layers,0.1, 0.9, util.linear)
+nn = NeuralNetwork.MyNeuralNetwork(layers,  1, 0.01, 0.9, util.linear, 0.2)
 
 # call fit function with features (n_samples,n_features) and targets (n_samples)
 nn.fit(training_features, training_targets)
