@@ -27,9 +27,9 @@ class MyNeuralNetwork:
       self.xi.append(np.zeros(layers[lay]))
 
     self.w = []             # edge weights
-    self.w.append(np.zeros((1, 1)))
+    self.w.append(np.ones((1, 1)))
     for lay in range(1, self.L):
-      self.w.append(np.zeros((layers[lay], layers[lay - 1])))
+      self.w.append(np.ones((layers[lay], layers[lay - 1])))
 
     self.h = []             # nan array of arrays for the fields (h)
     for lay in range(self.L):
