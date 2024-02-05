@@ -57,6 +57,13 @@ class MyNeuralNetwork:
 
     self.fact = operation
   
+  def initialize_weights_for_test(self):
+    self.w = []             # edge weights
+    self.w.append(np.ones((1, 1)))
+    for lay in range(1, self.L):
+      self.w.append(np.ones((self.n[lay], self.n[lay - 1])))
+    return
+
   # X : an array of arrays size (n_samples,n_features), which holds the training samples represented as floating point
   #feature vectors; and a vector y of size (n_samples), which holds the target values for the training samples
   def fit(self, X, y):
