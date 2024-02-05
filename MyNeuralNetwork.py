@@ -1,5 +1,3 @@
-from tkinter import W
-import pandas as pd
 import numpy as np
 import Utility as util
 from sklearn.model_selection import train_test_split
@@ -27,9 +25,9 @@ class MyNeuralNetwork:
       self.xi.append(np.zeros(layers[lay]))
 
     self.w = []             # edge weights
-    self.w.append(np.ones((1, 1)))
+    self.w.append(np.zeros((1, 1)))
     for lay in range(1, self.L):
-      self.w.append(np.ones((layers[lay], layers[lay - 1])))
+      self.w.append(np.zeros((layers[lay], layers[lay - 1])))
 
     self.h = []             # nan array of arrays for the fields (h)
     for lay in range(self.L):
@@ -71,16 +69,22 @@ class MyNeuralNetwork:
     for epoch in range(0, self.num_epochs):
       
       for i in range(0 , num_training_patterns):
+        
+        try:
+          #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+          o = self.feedforward(X_train[i])
+          print("sample : ", i, " ,x : ", X_train[i])
+          #print(self.w)
 
-        #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
-        o = self.feedforward(X_train[i])
-        print("sample : ", i, " ,x : ", X_train[i])
-        print(self.w)
-        #Back−propagate the error for this pattern
-        self.backpropagate(o, y_train[i])
+          #Back−propagate the error for this pattern
+          self.backpropagate(o, y_train[i])
 
+          #update the weights
+          self.update_weights()
+        except:
+          print("An exception occurred")
 
-        self.update_weights()
+          
         # print("sample : ", i, " ,x : ", X_train[i])
         # print(self.w)
       # print("epoch = ", epoch)
@@ -120,20 +124,22 @@ class MyNeuralNetwork:
   def backpropagate(self, o, z):
 
     #Δ(L) = g'(h(L))(o - z)
+    delta = (o - z)
+    t1 = self.fact.g_diff(self.h[self.L - 1])
+    t2 = t1 * delta
     self.delta[self.L - 1] = self.fact.g_diff(self.h[self.L - 1]) * (o - z)
     l = self.L - 1
-    for i in range(l - 1, 0, -1):
+    for j in range(l - 1, 0, -1):
 
-      # temp = np.dot(self.delta[i + 1], self.w[i + 1])
-      # print(temp)
+      t3 = np.dot(self.delta[j + 1], self.w[j + 1])
+      #print(t3)
 
-      # g_temp = self.fact.g_diff(self.h[i])
+      t4 = self.fact.g_diff(self.h[j])
       # print(g_temp)
 
       # print(temp * g_temp) 
-      self.delta[i] = self.fact.g_diff(self.h[i]) * np.dot(self.delta[i + 1], self.w[i + 1])
+      self.delta[j] = self.fact.g_diff(self.h[j]) * np.dot(self.delta[j + 1], self.w[j + 1])
     return
-
 
   #Update weights and thresholds
   def update_weights(self):
@@ -141,7 +147,7 @@ class MyNeuralNetwork:
     for lay in range(1, self.L):
       
       product_t = np.outer(self.delta[lay], self.xi[lay - 1])
-      #print(product_t)
+      # print(product_t)
       # print(-1 * self.eta *product_t)
       # Amount of weights update
       # The elements of the resulting matrix are obtained by outer function by multiplying each element of vector1 by each element of vector2. The resulting matrix has dimensions len(vector1) x len(vector2)
@@ -156,10 +162,9 @@ class MyNeuralNetwork:
 
       self.d_theta_prev[lay] = self.d_theta[lay]
 
-
       # Finally, update all the weights and thresholds
       self.w[lay] = self.w[lay] + self.d_w[lay]
-      #print(self.w)
+      # print(self.w)
       self.theta[lay] = self.theta[lay] + self.d_theta[lay]
 
     return 
