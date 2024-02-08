@@ -1,5 +1,4 @@
 import numpy as np
-import Utility as util
 from sklearn.model_selection import train_test_split
 
 # Neural Network class
