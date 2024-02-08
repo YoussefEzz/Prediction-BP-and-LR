@@ -55,6 +55,13 @@ class MyNeuralNetwork:
       self.d_theta_prev.append(np.zeros(layers[lay]))
 
     self.fact = operation
+
+  def initialize_weights(self):
+    self.w = []             # edge weights
+    self.w.append(np.random.random((1, 1)))
+    for lay in range(1, self.L):
+      self.w.append(np.random.random((self.n[lay], self.n[lay - 1])))
+    return
   
   def initialize_weights_for_test(self):
     self.w = []             # edge weights
