@@ -17,7 +17,7 @@ class MyNeuralNetwork:
 
     self.theta = [] #an array of arrays for the thresholds (θ)
     for lay in range(self.L):
-      self.theta.append( np.zeros(layers[lay]))
+      self.theta.append( np.random.random(layers[lay]))
 
     self.xi = []            # node values
     for lay in range(self.L):
