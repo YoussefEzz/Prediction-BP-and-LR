@@ -12,8 +12,8 @@ class MyNeuralNetwork:
     self.validation_percent = validation_percent if validation_percent > 0 else None  # validation_percent
     self.num_epochs = num_epochs                                                      # epochs
 
-    self.training_error = []                                                          # array of size (n_epochs, 2) that contain the evolution of the training error
-    self.validation_error = []                                                        # array of size (n_epochs, 2) that contain the evolution of the validation error
+    self.training_error = np.zeros((self.num_epochs, 2))                                                          # array of size (n_epochs, 2) that contain the evolution of the training error
+    self.validation_error = np.zeros((self.num_epochs, 2))                                                          # array of size (n_epochs, 2) that contain the evolution of the validation error
 
     self.theta = [] #an array of arrays for the thresholds (θ)
     for lay in range(self.L):
@@ -56,6 +56,7 @@ class MyNeuralNetwork:
 
     self.fact = operation
 
+  # initialize weights with random values
   def initialize_weights(self):
     self.w = []             # edge weights
     self.w.append(np.random.random((1, 1)))
@@ -63,6 +64,7 @@ class MyNeuralNetwork:
       self.w.append(np.random.random((self.n[lay], self.n[lay - 1])))
     return
   
+  # initialize weights with ones for test
   def initialize_weights_for_test(self):
     self.w = []             # edge weights
     self.w.append(np.ones((1, 1)))
@@ -83,19 +85,17 @@ class MyNeuralNetwork:
       
       for i in range(0 , num_training_patterns):
         
-        try:
-          #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
-          o = self.feedforward(X_train[i])
-          print("sample : ", i, " ,x : ", X_train[i])
-          #print(self.w)
+        #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+        o = self.feedforward(X_train[i])
+        #print("training sample : ", i, " ,x : ", X_train[i])
+        #print(self.w)
 
-          #Back−propagate the error for this pattern
-          self.backpropagate(o, y_train[i])
+        #Back−propagate the error for this pattern
+        self.backpropagate(o, y_train[i])
 
-          #update the weights
-          self.update_weights()
-        except:
-          print("An exception occurred")
+        #update the weights
+        self.update_weights()
+       
 
           
         # print("sample : ", i, " ,x : ", X_train[i])
@@ -103,10 +103,10 @@ class MyNeuralNetwork:
       # print("epoch = ", epoch)
       
       #Feed−forward all training patterns and calculate their prediction quadratic error
-      #self.error(X_train, y_train, self.training_error)
+      self.training_error_compute(X_train, y_train, epoch)
 
       #Feed−forward all validation patterns and calculate their prediction quadratic error
-      #self.error(X_validation, y_validation, self.validation_error)
+      self.validation_error_compute(X_validation, y_validation, epoch)
 
     return
   
@@ -182,8 +182,9 @@ class MyNeuralNetwork:
 
     return 
   
+  #trainig error compute
   #PQE = Σ(y_pred - y_actual)^2 / n
-  def error(self, X_train, y_train, error):
+  def training_error_compute(self, X_train, y_train, epoch):
     num_patterns = X_train.shape[0]
     PQE = 0
     for i in range(0 , num_patterns):
@@ -195,4 +196,23 @@ class MyNeuralNetwork:
         PQE = PQE + ((o - z) ** 2)
 
     PQE = PQE / num_patterns
-    error.append(PQE)
+    self.training_error[epoch, 0] = epoch
+    self.training_error[epoch, 1] = PQE
+    
+
+  #validation error compute
+  #PQE = Σ(y_pred - y_actual)^2 / n
+  def validation_error_compute(self, X_validation, y_validation, epoch):
+    num_patterns = X_validation.shape[0]
+    PQE = 0
+    for i in range(0 , num_patterns):
+
+        
+        z = y_validation[i]
+        #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
+        o = self.feedforward(X_validation[i])
+        PQE = PQE + ((o - z) ** 2)
+
+    PQE = PQE / num_patterns
+    self.validation_error[epoch, 0] = epoch
+    self.validation_error[epoch, 1] = PQE
