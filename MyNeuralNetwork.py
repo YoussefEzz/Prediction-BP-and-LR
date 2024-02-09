@@ -71,6 +71,13 @@ class MyNeuralNetwork:
     for lay in range(1, self.L):
       self.w.append(np.ones((self.n[lay], self.n[lay - 1])))
     return
+  
+  # initialize thresholds with zeros for test
+  def initialize_thresholds_for_test(self):
+    self.theta = [] #an array of arrays for the thresholds (θ)
+    for lay in range(self.L):
+      self.theta.append( np.zeros(self.n[lay]))
+    return
 
   # X : an array of arrays size (n_samples,n_features), which holds the training samples represented as floating point
   #feature vectors; and a vector y of size (n_samples), which holds the target values for the training samples
@@ -145,12 +152,12 @@ class MyNeuralNetwork:
     for j in range(l - 1, 0, -1):
 
       t3 = np.dot(self.delta[j + 1], self.w[j + 1])
-      #print(t3)
+      #print(type(t3))
 
       t4 = self.fact.g_diff(self.h[j])
-      # print(g_temp)
+      #print(t4)
 
-      # print(temp * g_temp) 
+      #print(t3 * t4) 
       self.delta[j] = self.fact.g_diff(self.h[j]) * np.dot(self.delta[j + 1], self.w[j + 1])
     return
 
@@ -165,7 +172,9 @@ class MyNeuralNetwork:
       # Amount of weights update
       # The elements of the resulting matrix are obtained by outer function by multiplying each element of vector1 by each element of vector2. The resulting matrix has dimensions len(vector1) x len(vector2)
       self.d_w[lay] = -1 * self.eta * np.outer(self.delta[lay], self.xi[lay - 1]) + self.alpha * self.d_w_prev[lay]
-
+      print("self.delta[",lay,"] : ", self.delta[lay])
+      print("self.xi[", lay - 1, "] : ", self.xi[lay - 1])
+      print("self.d_w[", lay, "] : ", self.d_w[lay])
       # Amount of thresholds update
       self.d_theta[lay]  = self.eta * self.delta[lay] + self.alpha * self.d_theta_prev[lay]
 
