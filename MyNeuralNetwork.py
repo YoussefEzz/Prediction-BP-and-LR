@@ -172,9 +172,9 @@ class MyNeuralNetwork:
       # Amount of weights update
       # The elements of the resulting matrix are obtained by outer function by multiplying each element of vector1 by each element of vector2. The resulting matrix has dimensions len(vector1) x len(vector2)
       self.d_w[lay] = -1 * self.eta * np.outer(self.delta[lay], self.xi[lay - 1]) + self.alpha * self.d_w_prev[lay]
-      print("self.delta[",lay,"] : ", self.delta[lay])
-      print("self.xi[", lay - 1, "] : ", self.xi[lay - 1])
-      print("self.d_w[", lay, "] : ", self.d_w[lay])
+      # print("self.delta[",lay,"] : ", self.delta[lay])
+      # print("self.xi[", lay - 1, "] : ", self.xi[lay - 1])
+      # print("self.d_w[", lay, "] : ", self.d_w[lay])
       # Amount of thresholds update
       self.d_theta[lay]  = self.eta * self.delta[lay] + self.alpha * self.d_theta_prev[lay]
 
