@@ -100,7 +100,7 @@ class MyNeuralNetwork:
           
         # print("sample : ", i, " ,x : ", X_train[i])
         # print(self.w)
-      # print("epoch = ", epoch)
+      print("epoch = ", epoch)
       
       #Feed−forward all training patterns and calculate their prediction quadratic error
       self.training_error_compute(X_train, y_train, epoch)
@@ -189,7 +189,6 @@ class MyNeuralNetwork:
     PQE = 0
     for i in range(0 , num_patterns):
 
-        
         z = y_train[i]
         #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
         o = self.feedforward(X_train[i])
@@ -206,8 +205,7 @@ class MyNeuralNetwork:
     num_patterns = X_validation.shape[0]
     PQE = 0
     for i in range(0 , num_patterns):
-
-        
+   
         z = y_validation[i]
         #Feed−forward propagation of pattern xµ to obtain the output o(xµ)
         o = self.feedforward(X_validation[i])
@@ -216,3 +214,7 @@ class MyNeuralNetwork:
     PQE = PQE / num_patterns
     self.validation_error[epoch, 0] = epoch
     self.validation_error[epoch, 1] = PQE
+
+  #
+  def loss_epochs(self):
+    return self.training_error, self.validation_error

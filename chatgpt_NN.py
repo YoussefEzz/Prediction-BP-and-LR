@@ -73,6 +73,7 @@ def train_neural_network(inputs, targets, validation_inputs, validation_targets,
     plt.plot(np.arange(1, epochs+ 1), validation_errors, label='Validation Error')
     plt.xlabel('Epochs')
     plt.ylabel('Quadratic Error')
+    plt.title('plot of evolution of training and validation error using CHATGPT code')
     plt.legend()
     plt.show()
 
